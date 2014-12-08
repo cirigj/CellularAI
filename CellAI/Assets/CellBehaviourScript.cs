@@ -72,6 +72,7 @@ public class CellBehaviourScript : MonoBehaviour {
 
 	// Add or remove cells from nearbyCells list based on proximity
 	void ExamineNearbyCells () {
+		DetermineState ();
 
 	}
 
