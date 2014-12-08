@@ -1,0 +1,6 @@
+2
+
+intakeSpeed 1:processingSpeed 1:sugarCapacity 1:maxMovementSpeed 1:useEfficiency 1:energyCapacity 1:courage 1:hostility 1:cowardice 1:greed 1 
+
+intakeSpeed 2:processingSpeed 2:sugarCapacity 22:maxMovementSpeed 2:useEfficiency 2:energyCapacity 2:courage 22:hostility 2:cowardice 2:greed 2 
+
