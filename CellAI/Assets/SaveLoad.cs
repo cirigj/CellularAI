@@ -5,8 +5,10 @@ using System.Collections.Generic;
 using System;
 using System.IO;
 public class SaveLoad : MonoBehaviour {
+
 	public string fileName = "saveFile.txt";
 	public List<GameObject> cells;
+
 	/*
 // genetic (physical):
 	public float intakeSpeed;
@@ -25,7 +27,7 @@ public class SaveLoad : MonoBehaviour {
 	void Start () {
 
 		StreamWriter save = new StreamWriter (fileName);
-		save.WriteLine("{0}\n",cells.Capacity);
+		save.WriteLine("{0}\n", cells.Count);
 		save.Flush();
 		foreach (GameObject cell in cells) {
 			CellBehaviourScript behaviour = cell.GetComponent<CellBehaviourScript>();

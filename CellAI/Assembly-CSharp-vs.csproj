@@ -50,6 +50,7 @@
      <Compile Include="Assets\CellSpawning.cs" />
      <Compile Include="Assets\EnvironmentScript.cs" />
      <Compile Include="Assets\SaveLoad.cs" />
+     <Compile Include="Assets\SugarCubeScript.cs" />
  <Reference Include="UnityEngine.UI">
  <HintPath>C:/Program Files (x86)/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/4.6.0/UnityEngine.UI.dll</HintPath>
  </Reference>

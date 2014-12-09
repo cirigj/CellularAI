@@ -20,6 +20,7 @@ public class CellBehaviourScript : MonoBehaviour {
 	public float energy;
 	public float sugar;
 	public float radius;
+	public GameObject cellPrefab;
 	public bool dead;
 	// non-genetic (private):
 	private float splitProgress;
@@ -35,7 +36,11 @@ public class CellBehaviourScript : MonoBehaviour {
 	void Start () {
 		tf = GetComponent<Transform>();
 		rb = GetComponent<Rigidbody2D>();
+		energy = EnvironmentScript.startingEnergyPercentage * energyCapacity;
+		sugar = EnvironmentScript.startingSugarPercentage * sugarCapacity;
+		splitProgress = 0f;
 		state = "wander";
+		priorTarget = null;
 		target = null;
 		nearbyCells = new List<GameObject>();
 		nearbySugar = new List<GameObject>();
@@ -233,7 +238,13 @@ public class CellBehaviourScript : MonoBehaviour {
 	// Move towards sugar cube to get sugar from it
 	void Scavenge () {
 		MoveTowardsTarget(maxMovementSpeed);
-
+		SugarCubeScript targetScript = target.GetComponent<SugarCubeScript>();
+		float sugarRadius = targetScript.sugarLevel * EnvironmentScript.sugarLevelRangeMultiplier;
+		if (Vector3.Distance(tf.position, target.position) < (radius + sugarRadius + intakeSpeed * EnvironmentScript.intakeRangeRatio)) {
+			float sugarDist = Vector3.Distance(tf.position, target.position) - radius - (intakeSpeed * EnvironmentScript.intakeRangeRatio);
+			sugar += intakeSpeed * targetScript.sugarLevel / sugarDist;
+			targetScript.sugarLevel -= intakeSpeed * targetScript.sugarLevel * EnvironmentScript.sugarCubeResilience / sugarDist;
+		}
 	}
 
 	// Attack another cell
@@ -274,7 +285,19 @@ public class CellBehaviourScript : MonoBehaviour {
 
 	// Split cell into two cells (called within ProduceEnergy)
 	void Split () {
-
+		GameObject newCell = (GameObject)Instantiate(cellPrefab, tf.position, Quaternion.identity);
+		CellBehaviourScript newCellScript = newCell.GetComponent<CellBehaviourScript>();
+		newCellScript.intakeSpeed = intakeSpeed;
+		newCellScript.processingSpeed = processingSpeed;
+		newCellScript.sugarCapacity = sugarCapacity;
+		newCellScript.maxMovementSpeed = maxMovementSpeed;
+		newCellScript.useEfficiency = useEfficiency;
+		newCellScript.energyCapacity = energyCapacity;
+		newCellScript.courage = courage;
+		newCellScript.hostility = hostility;
+		newCellScript.cowardice = cowardice;
+		newCellScript.greed = greed;
+		newCellScript.cellPrefab = cellPrefab;
 	}
 
 	// Move randomly, then expend energy

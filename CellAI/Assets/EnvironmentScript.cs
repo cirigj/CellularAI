@@ -14,6 +14,8 @@ public class EnvironmentScript : MonoBehaviour {
 	public static float startingSugarPercentage;
 	public static float startingEnergyPercentage;
 	public static float sugarCapacityToVolumeRatio;
+	public static float sugarLevelRangeMultiplier;
+	public static float sugarCubeResilience;
 	public static string cellTag;
 	public static string sugarTag;
 
@@ -30,6 +32,8 @@ public class EnvironmentScript : MonoBehaviour {
 		startingSugarPercentage = 1.0f;
 		startingEnergyPercentage = 0.5f;
 		sugarCapacityToVolumeRatio = 5.0f;
+		sugarLevelRangeMultiplier = 5.0f;
+		sugarCubeResilience = 0.05f;
 		cellTag = "cell";
 		sugarTag = "sugar";
 	}
