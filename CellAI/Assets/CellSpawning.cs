@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
+
+using System.Collections.Generic;
 /*
 Vars:
 float Timer between generation
@@ -16,7 +18,7 @@ void breed(GO,GO)
  */
 
 public class CellSpawning : MonoBehaviour {
-
+	public List<GameObject> cells;
 	// Use this for initialization
 	void Start () {
 	

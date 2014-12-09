@@ -238,7 +238,7 @@ public class CellBehaviourScript : MonoBehaviour {
 
 	// Attack another cell
 	void Aggress () {
-		CellBehaviorScript targetScript = target.GetComponent<CellBehaviourScript>();
+		CellBehaviourScript targetScript = target.GetComponent<CellBehaviourScript>();
 		MoveTowardsTarget(maxMovementSpeed);
 		if (Vector3.Distance(tf.position, target.position) < (radius + targetScript.radius + intakeSpeed * EnvironmentScript.intakeRangeRatio)) {
 			sugar += (intakeSpeed - targetScript.intakeSpeed) * (targetScript.sugar/targetScript.sugarCapacity);
@@ -288,7 +288,7 @@ public class CellBehaviourScript : MonoBehaviour {
 	// Set and clamp velocity, then expend energy
 	void MoveTowardsTarget (float speed) {
 		Vector3 dir3 = target.position - tf.position;
-		Vector2 dir2 = new Vector2(dir3.x, dir3.y, 0f).normalized;
+		Vector2 dir2 = new Vector2(dir3.x, dir3.y).normalized;
 		rb.velocity += dir2 * EnvironmentScript.maxSpeedChange;
 		rb.velocity = Vector2.ClampMagnitude(rb.velocity, speed);
 		ExpendEnergy(speed);
