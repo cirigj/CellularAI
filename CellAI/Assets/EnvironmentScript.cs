@@ -29,6 +29,16 @@ public class EnvironmentScript : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+
+	}
+	
+	// Update is called once per frame
+	void Update () {
+		
+	}
+
+	// Because apparently I have to do all the ordering myself or Unity freaks out
+	public void Initialize() {
 		fieldRadius = 80.0f;
 		baseConcentration = 1.0f;
 		wanderSpeedPercentage = 0.75f;
@@ -47,14 +57,9 @@ public class EnvironmentScript : MonoBehaviour {
 		sugarCubeSpeedMax = 6f;
 		viewCheckRefresh = 10f;
 		behavioralReinforcement = 0.005f;
-		behavioralRegression = -0.0015f;
+		behavioralRegression = -0.0005f;
 		cellTag = "cell";
 		sugarTag = "sugar";
 		fieldWrapping = true;
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
 	}
 }

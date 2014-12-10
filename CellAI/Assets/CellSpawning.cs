@@ -54,8 +54,11 @@ public class CellSpawning : MonoBehaviour {
 	private float capacityMutationRate = 10.0f;
 	private float behaviorMutationRate = 0.05f;
 	public bool constrainGenes = true;
+	public bool waitMinSecs = false;
+	public float minSecsTilNextGen = 5f;
 	public bool loadFirstGenFromFile = false;
 	public bool saveGensToFile = false;
+	public bool printAverageBehavior = true;
 	private CellBehaviourScript nextParent1;
 	private CellBehaviourScript nextParent2;
 	private float doomsdayTimer;
@@ -63,20 +66,24 @@ public class CellSpawning : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		GetComponent<EnvironmentScript>().Initialize();
 		nextParent1 = null;
 		nextParent2 = null;
 		CreateLife();
 		doomsdayTimer = 0f;
 		generationNumber = 0;
+		Debug.Log("Generation " + generationNumber.ToString() + " created after " + doomsdayTimer.ToString() + " seconds.");
 	}
 	
 	// Update is called once per frame
 	void FixedUpdate () {
 		doomsdayTimer += Time.fixedDeltaTime;
-		if (doomsdayTimer >= timeBetweenGenerations || EnvironmentScript.liveCells <= 2) {
+		if (((doomsdayTimer >= timeBetweenGenerations || EnvironmentScript.liveCells <= 2) && !waitMinSecs) 
+		    || (doomsdayTimer >= minSecsTilNextGen && waitMinSecs && EnvironmentScript.liveCells <= 2)
+		    || (waitMinSecs && (doomsdayTimer >= timeBetweenGenerations || EnvironmentScript.liveCells <= 1))) {
 			generationNumber++;
-			Debug.Log("Generation " + generationNumber.ToString() + " created after " + doomsdayTimer.ToString() + " seconds.");
 			PerpetuateLife();
+			Debug.Log("Generation " + generationNumber.ToString() + " created after " + doomsdayTimer.ToString() + " seconds.");
 			doomsdayTimer = 0f;
 		}
 	}
@@ -117,6 +124,7 @@ public class CellSpawning : MonoBehaviour {
 			for (int i = 0; i < cellsPerGeneration; i++) {
 				GenerateCellRandom();
 			}
+			generationNumber = 0;
 		}
 		GameObject[] allCubes = GameObject.FindGameObjectsWithTag(EnvironmentScript.sugarTag);
 		foreach (GameObject cube in allCubes) {
@@ -128,6 +136,9 @@ public class CellSpawning : MonoBehaviour {
 		EnvironmentScript.liveCells = cellsPerGeneration;
 		foreach (GameObject cell in allCells) {
 			cell.GetComponent<CellBehaviourScript>().markedForExtinction = true;
+		}
+		if (printAverageBehavior) {
+			AssessAverages();
 		}
 	}
 
@@ -168,7 +179,7 @@ public class CellSpawning : MonoBehaviour {
 	}
 
 	// Generate a random cell
-	void GenerateCellRandom () {
+	public void GenerateCellRandom () {
 		GameObject newCell = (GameObject)Instantiate(cellPrefab, 
 		                      new Vector3(Random.Range(-EnvironmentScript.fieldRadius, EnvironmentScript.fieldRadius), 
 		                      Random.Range(-EnvironmentScript.fieldRadius, EnvironmentScript.fieldRadius), 
@@ -186,12 +197,13 @@ public class CellSpawning : MonoBehaviour {
 		newCellScript.cowardice = Random.Range(cowardiceMin, cowardiceMax);
 		newCellScript.greed = Random.Range(greedMin, greedMax);
 		newCellScript.cellPrefab = cellPrefab;
+		newCellScript.numberOfSplits = 0;
 		newCellScript.radius = Mathf.Pow(0.75f * Mathf.PI * (newCellScript.sugarCapacity/EnvironmentScript.sugarCapacityToVolumeRatio), 1f/3f);
 		newCellScript.GetComponent<Transform>().localScale = new Vector3(newCellScript.radius * 2f, newCellScript.radius * 2f, newCellScript.radius * 2f);
 	}
 
 	// Generate a cell from template
-	void GenerateCellFromTemplate (float iS, float pS, float sC, float mMS, float uE, float eC, float cou, float hos, float cow, float gre) {
+	public void GenerateCellFromTemplate (float iS, float pS, float sC, float mMS, float uE, float eC, float cou, float hos, float cow, float gre) {
 		GameObject newCell = (GameObject)Instantiate(cellPrefab, 
 		                      new Vector3(Random.Range(-EnvironmentScript.fieldRadius, EnvironmentScript.fieldRadius), 
 		                      Random.Range(-EnvironmentScript.fieldRadius, EnvironmentScript.fieldRadius), 
@@ -209,6 +221,7 @@ public class CellSpawning : MonoBehaviour {
 		newCellScript.cowardice = cow;
 		newCellScript.greed = gre;
 		newCellScript.cellPrefab = cellPrefab;
+		newCellScript.numberOfSplits = 0;
 		newCellScript.radius = Mathf.Pow(0.75f * Mathf.PI * (newCellScript.sugarCapacity/EnvironmentScript.sugarCapacityToVolumeRatio), 1f/3f);
 		newCellScript.GetComponent<Transform>().localScale = new Vector3(newCellScript.radius * 2f, newCellScript.radius * 2f, newCellScript.radius * 2f);
 	}
@@ -282,6 +295,7 @@ public class CellSpawning : MonoBehaviour {
 			newCellScript.greed = parent2.greed
 				+ Random.Range(-masterMutationRate*0.5f*behaviorMutationRate, masterMutationRate*0.5f*behaviorMutationRate); }
 		newCellScript.cellPrefab = cellPrefab;
+		newCellScript.numberOfSplits = 0;
 		newCellScript.radius = Mathf.Pow(0.75f * Mathf.PI * (newCellScript.sugarCapacity/EnvironmentScript.sugarCapacityToVolumeRatio), 1f/3f);
 		newCellScript.GetComponent<Transform>().localScale = new Vector3(newCellScript.radius * 2f, newCellScript.radius * 2f, newCellScript.radius * 2f);
 		if (constrainGenes) {
@@ -351,5 +365,38 @@ public class CellSpawning : MonoBehaviour {
 		else if (cellScript.greed > greedMax) {
 			cellScript.greed = greedMax;
 		}
+	}
+
+	// Print out the average behavioral values
+	void AssessAverages () {
+		if (generationNumber == 0) {
+			return;
+		}
+		GameObject[] allCells = GameObject.FindGameObjectsWithTag(EnvironmentScript.cellTag);
+		List<CellBehaviourScript> currentGenCells = new List<CellBehaviourScript>();
+		foreach (GameObject cell in allCells) {
+			CellBehaviourScript cellScript = cell.GetComponent<CellBehaviourScript>();
+			if (cellScript.markedForExtinction) {
+				continue;
+			}
+			currentGenCells.Add(cellScript);
+		}
+		float avgHostility, avgCowardice, avgCourage, avgGreed;
+		avgHostility = avgCowardice = avgCourage = avgGreed = 0f;
+		foreach (CellBehaviourScript cell in currentGenCells) {
+			avgHostility += cell.hostility;
+			avgCowardice = cell.cowardice;
+			avgCourage = cell.courage;
+			avgGreed = cell.greed;
+		}
+		avgHostility = avgHostility/(float)cellsPerGeneration;
+		avgCowardice = avgCowardice/(float)cellsPerGeneration;
+		avgCourage = avgCourage/(float)cellsPerGeneration;
+		avgGreed = avgGreed/(float)cellsPerGeneration;
+		Debug.Log("Average behavioral values for generation " + generationNumber.ToString() + ":\n"
+		          + "Hostility: " + avgHostility.ToString() + ", "
+		          + "Cowardice: " + avgCowardice.ToString() + ", "
+		          + "Courage: " + avgCourage.ToString() + ", "
+		          + "Greed: " + avgGreed.ToString());
 	}
 }
