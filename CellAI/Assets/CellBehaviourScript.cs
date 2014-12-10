@@ -447,7 +447,7 @@ public class CellBehaviourScript : MonoBehaviour {
 	// Call this whenever a cell is expending energy on movement
 	void ExpendEnergy (float speed) {
 		// expend energy first
-		energy -= useEfficiency * speed;
+		energy -= useEfficiency * Mathf.Abs(speed);
 		// cell dies if energy has been depleted
 		if (energy <= 0f) {
 			dead = true;

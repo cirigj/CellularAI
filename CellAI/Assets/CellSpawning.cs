@@ -58,6 +58,7 @@ public class CellSpawning : MonoBehaviour {
 	public float minSecsTilNextGen = 5f;
 	public bool loadFirstGenFromFile = false;
 	public bool saveGensToFile = false;
+	public bool printAverageBehavior = true;
 	private CellBehaviourScript nextParent1;
 	private CellBehaviourScript nextParent2;
 	private float doomsdayTimer;
@@ -79,7 +80,7 @@ public class CellSpawning : MonoBehaviour {
 		doomsdayTimer += Time.fixedDeltaTime;
 		if (((doomsdayTimer >= timeBetweenGenerations || EnvironmentScript.liveCells <= 2) && !waitMinSecs) 
 		    || (doomsdayTimer >= minSecsTilNextGen && waitMinSecs && EnvironmentScript.liveCells <= 2)
-		    || (waitMinSecs && doomsdayTimer >= timeBetweenGenerations)) {
+		    || (waitMinSecs && (doomsdayTimer >= timeBetweenGenerations || EnvironmentScript.liveCells <= 1))) {
 			generationNumber++;
 			PerpetuateLife();
 			Debug.Log("Generation " + generationNumber.ToString() + " created after " + doomsdayTimer.ToString() + " seconds.");
@@ -135,6 +136,9 @@ public class CellSpawning : MonoBehaviour {
 		EnvironmentScript.liveCells = cellsPerGeneration;
 		foreach (GameObject cell in allCells) {
 			cell.GetComponent<CellBehaviourScript>().markedForExtinction = true;
+		}
+		if (printAverageBehavior) {
+			AssessAverages();
 		}
 	}
 
@@ -361,5 +365,38 @@ public class CellSpawning : MonoBehaviour {
 		else if (cellScript.greed > greedMax) {
 			cellScript.greed = greedMax;
 		}
+	}
+
+	// Print out the average behavioral values
+	void AssessAverages () {
+		if (generationNumber == 0) {
+			return;
+		}
+		GameObject[] allCells = GameObject.FindGameObjectsWithTag(EnvironmentScript.cellTag);
+		List<CellBehaviourScript> currentGenCells = new List<CellBehaviourScript>();
+		foreach (GameObject cell in allCells) {
+			CellBehaviourScript cellScript = cell.GetComponent<CellBehaviourScript>();
+			if (cellScript.markedForExtinction) {
+				continue;
+			}
+			currentGenCells.Add(cellScript);
+		}
+		float avgHostility, avgCowardice, avgCourage, avgGreed;
+		avgHostility = avgCowardice = avgCourage = avgGreed = 0f;
+		foreach (CellBehaviourScript cell in currentGenCells) {
+			avgHostility += cell.hostility;
+			avgCowardice = cell.cowardice;
+			avgCourage = cell.courage;
+			avgGreed = cell.greed;
+		}
+		avgHostility = avgHostility/(float)cellsPerGeneration;
+		avgCowardice = avgCowardice/(float)cellsPerGeneration;
+		avgCourage = avgCourage/(float)cellsPerGeneration;
+		avgGreed = avgGreed/(float)cellsPerGeneration;
+		Debug.Log("Average behavioral values for generation " + generationNumber.ToString() + ":\n"
+		          + "Hostility: " + avgHostility.ToString() + ", "
+		          + "Cowardice: " + avgCowardice.ToString() + ", "
+		          + "Courage: " + avgCourage.ToString() + ", "
+		          + "Greed: " + avgGreed.ToString());
 	}
 }

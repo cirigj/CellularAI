@@ -210,16 +210,17 @@ MonoBehaviour:
   cellPrefab: {fileID: 100000, guid: 27802631e6ca1d449b4162d418f9d306, type: 2}
   cubePrefab: {fileID: 100000, guid: c4d374853bd43874f84765afcfbf4b24, type: 2}
   cellsPerGeneration: 15
-  sugarPerGeneration: 0
+  sugarPerGeneration: 10
   sugarMin: 5
   sugarMax: 8
-  timeBetweenGenerations: 20
-  masterMutationRate: 1
+  timeBetweenGenerations: 30
+  masterMutationRate: 5
   constrainGenes: 1
   waitMinSecs: 1
-  minSecsTilNextGen: 10
+  minSecsTilNextGen: 30
   loadFirstGenFromFile: 0
   saveGensToFile: 0
+  printAverageBehavior: 1
 --- !u!4 &1635345843
 Transform:
   m_ObjectHideFlags: 0
