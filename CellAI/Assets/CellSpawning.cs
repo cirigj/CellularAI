@@ -54,6 +54,8 @@ public class CellSpawning : MonoBehaviour {
 	private float capacityMutationRate = 10.0f;
 	private float behaviorMutationRate = 0.05f;
 	public bool constrainGenes = true;
+	public bool waitMinSecs = false;
+	public float minSecsTilNextGen = 5f;
 	public bool loadFirstGenFromFile = false;
 	public bool saveGensToFile = false;
 	private CellBehaviourScript nextParent1;
@@ -63,20 +65,24 @@ public class CellSpawning : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		GetComponent<EnvironmentScript>().Initialize();
 		nextParent1 = null;
 		nextParent2 = null;
 		CreateLife();
 		doomsdayTimer = 0f;
 		generationNumber = 0;
+		Debug.Log("Generation " + generationNumber.ToString() + " created after " + doomsdayTimer.ToString() + " seconds.");
 	}
 	
 	// Update is called once per frame
 	void FixedUpdate () {
 		doomsdayTimer += Time.fixedDeltaTime;
-		if (doomsdayTimer >= timeBetweenGenerations || EnvironmentScript.liveCells <= 2) {
+		if (((doomsdayTimer >= timeBetweenGenerations || EnvironmentScript.liveCells <= 2) && !waitMinSecs) 
+		    || (doomsdayTimer >= minSecsTilNextGen && waitMinSecs && EnvironmentScript.liveCells <= 2)
+		    || (waitMinSecs && doomsdayTimer >= timeBetweenGenerations)) {
 			generationNumber++;
-			Debug.Log("Generation " + generationNumber.ToString() + " created after " + doomsdayTimer.ToString() + " seconds.");
 			PerpetuateLife();
+			Debug.Log("Generation " + generationNumber.ToString() + " created after " + doomsdayTimer.ToString() + " seconds.");
 			doomsdayTimer = 0f;
 		}
 	}
@@ -117,6 +123,7 @@ public class CellSpawning : MonoBehaviour {
 			for (int i = 0; i < cellsPerGeneration; i++) {
 				GenerateCellRandom();
 			}
+			generationNumber = 0;
 		}
 		GameObject[] allCubes = GameObject.FindGameObjectsWithTag(EnvironmentScript.sugarTag);
 		foreach (GameObject cube in allCubes) {
@@ -186,6 +193,7 @@ public class CellSpawning : MonoBehaviour {
 		newCellScript.cowardice = Random.Range(cowardiceMin, cowardiceMax);
 		newCellScript.greed = Random.Range(greedMin, greedMax);
 		newCellScript.cellPrefab = cellPrefab;
+		newCellScript.numberOfSplits = 0;
 		newCellScript.radius = Mathf.Pow(0.75f * Mathf.PI * (newCellScript.sugarCapacity/EnvironmentScript.sugarCapacityToVolumeRatio), 1f/3f);
 		newCellScript.GetComponent<Transform>().localScale = new Vector3(newCellScript.radius * 2f, newCellScript.radius * 2f, newCellScript.radius * 2f);
 	}
@@ -209,6 +217,7 @@ public class CellSpawning : MonoBehaviour {
 		newCellScript.cowardice = cow;
 		newCellScript.greed = gre;
 		newCellScript.cellPrefab = cellPrefab;
+		newCellScript.numberOfSplits = 0;
 		newCellScript.radius = Mathf.Pow(0.75f * Mathf.PI * (newCellScript.sugarCapacity/EnvironmentScript.sugarCapacityToVolumeRatio), 1f/3f);
 		newCellScript.GetComponent<Transform>().localScale = new Vector3(newCellScript.radius * 2f, newCellScript.radius * 2f, newCellScript.radius * 2f);
 	}
@@ -282,6 +291,7 @@ public class CellSpawning : MonoBehaviour {
 			newCellScript.greed = parent2.greed
 				+ Random.Range(-masterMutationRate*0.5f*behaviorMutationRate, masterMutationRate*0.5f*behaviorMutationRate); }
 		newCellScript.cellPrefab = cellPrefab;
+		newCellScript.numberOfSplits = 0;
 		newCellScript.radius = Mathf.Pow(0.75f * Mathf.PI * (newCellScript.sugarCapacity/EnvironmentScript.sugarCapacityToVolumeRatio), 1f/3f);
 		newCellScript.GetComponent<Transform>().localScale = new Vector3(newCellScript.radius * 2f, newCellScript.radius * 2f, newCellScript.radius * 2f);
 		if (constrainGenes) {

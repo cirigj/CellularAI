@@ -166,9 +166,9 @@ GameObject:
   serializedVersion: 4
   m_Component:
   - 4: {fileID: 1635345843}
+  - 114: {fileID: 1635345845}
   - 114: {fileID: 1635345842}
   - 114: {fileID: 1635345844}
-  - 114: {fileID: 1635345845}
   m_Layer: 0
   m_Name: CellControl
   m_TagString: Untagged
@@ -213,9 +213,11 @@ MonoBehaviour:
   sugarPerGeneration: 0
   sugarMin: 5
   sugarMax: 8
-  timeBetweenGenerations: 60
-  masterMutationRate: 5
+  timeBetweenGenerations: 20
+  masterMutationRate: 1
   constrainGenes: 1
+  waitMinSecs: 1
+  minSecsTilNextGen: 10
   loadFirstGenFromFile: 0
   saveGensToFile: 0
 --- !u!4 &1635345843

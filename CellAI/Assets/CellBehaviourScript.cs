@@ -52,7 +52,6 @@ public class CellBehaviourScript : MonoBehaviour {
 		dead = false;
 		markedForExtinction = false;
 		viewRefresh = 0f;
-		numberOfSplits = 0;
 		activated = true;
 	}
 	
@@ -462,16 +461,16 @@ public class CellBehaviourScript : MonoBehaviour {
 	void WrapField () {
 		if (EnvironmentScript.fieldWrapping) {
 			if (tf.position.x > EnvironmentScript.fieldRadius) {
-				tf.position = new Vector3(tf.position.x-2*EnvironmentScript.fieldRadius, tf.position.y, 0f);
+				tf.position = new Vector3(tf.position.x-2*EnvironmentScript.fieldRadius+radius, tf.position.y, 0f);
 			}
 			if (tf.position.y > EnvironmentScript.fieldRadius) {
-				tf.position = new Vector3(tf.position.x, tf.position.y-2*EnvironmentScript.fieldRadius, 0f);
+				tf.position = new Vector3(tf.position.x, tf.position.y-2*EnvironmentScript.fieldRadius+radius, 0f);
 			}
 			if (tf.position.x < -EnvironmentScript.fieldRadius) {
-				tf.position = new Vector3(tf.position.x+2*EnvironmentScript.fieldRadius, tf.position.y, 0f);
+				tf.position = new Vector3(tf.position.x+2*EnvironmentScript.fieldRadius-radius, tf.position.y, 0f);
 			}
 			if (tf.position.y < -EnvironmentScript.fieldRadius) {
-				tf.position = new Vector3(tf.position.x, tf.position.y+2*EnvironmentScript.fieldRadius, 0f);
+				tf.position = new Vector3(tf.position.x, tf.position.y+2*EnvironmentScript.fieldRadius-radius, 0f);
 			}
 		}
 	}
