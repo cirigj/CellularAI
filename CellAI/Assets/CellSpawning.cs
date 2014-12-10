@@ -179,7 +179,7 @@ public class CellSpawning : MonoBehaviour {
 	}
 
 	// Generate a random cell
-	void GenerateCellRandom () {
+	public void GenerateCellRandom () {
 		GameObject newCell = (GameObject)Instantiate(cellPrefab, 
 		                      new Vector3(Random.Range(-EnvironmentScript.fieldRadius, EnvironmentScript.fieldRadius), 
 		                      Random.Range(-EnvironmentScript.fieldRadius, EnvironmentScript.fieldRadius), 
