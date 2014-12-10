@@ -59,7 +59,7 @@ public class CellSpawning : MonoBehaviour {
 	private CellBehaviourScript nextParent1;
 	private CellBehaviourScript nextParent2;
 	private float doomsdayTimer;
-	private int generationNumber;
+	public static int generationNumber;
 
 	// Use this for initialization
 	void Start () {
@@ -154,7 +154,7 @@ public class CellSpawning : MonoBehaviour {
 
 	// Assess how fit the cell is
 	float FitnessAssessment (CellBehaviourScript cell) {
-		return cell.energy/cell.energyCapacity + (float)cell.numberOfSplits;
+		return cell.energy/cell.energyCapacity + (float)cell.numberOfSplits + cell.splitProgress/EnvironmentScript.splitProgressThreshhold;
 	}
 
 	// Generate sugar cube

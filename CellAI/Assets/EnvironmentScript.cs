@@ -20,6 +20,8 @@ public class EnvironmentScript : MonoBehaviour {
 	public static float sugarCubeSpeedMin;
 	public static float sugarCubeSpeedMax;
 	public static float viewCheckRefresh;
+	public static float behavioralReinforcement;
+	public static float behavioralRegression;
 	public static string cellTag;
 	public static string sugarTag;
 	public static int liveCells;
@@ -37,13 +39,15 @@ public class EnvironmentScript : MonoBehaviour {
 		energyToSplitProgressRatio = 5.0f;
 		splitProgressThreshhold = 500.0f;
 		startingSugarPercentage = 1.0f;
-		startingEnergyPercentage = 0.5f;
+		startingEnergyPercentage = 0.25f;
 		sugarCapacityToVolumeRatio = 5.0f;
 		sugarLevelRangeMultiplier = 2.0f;
 		sugarCubeResilience = 0.01f;
 		sugarCubeSpeedMin = 2f;
 		sugarCubeSpeedMax = 6f;
 		viewCheckRefresh = 10f;
+		behavioralReinforcement = 0.01f;
+		behavioralRegression = -0.0035f;
 		cellTag = "cell";
 		sugarTag = "sugar";
 		fieldWrapping = true;

@@ -312,6 +312,7 @@ public class CellBehaviourScript : MonoBehaviour {
 			sugar += intakeSpeed * (targetScript.sugarLevel * EnvironmentScript.sugarLevelRangeMultiplier - sugarDist);
 			targetScript.sugarLevel -= intakeSpeed * (targetScript.sugarLevel * EnvironmentScript.sugarLevelRangeMultiplier - sugarDist) * EnvironmentScript.sugarCubeResilience;
 		}
+		greed += EnvironmentScript.behavioralReinforcement * Time.fixedDeltaTime;
 	}
 
 	// Attack another cell
@@ -329,6 +330,7 @@ public class CellBehaviourScript : MonoBehaviour {
 				sugar += (intakeSpeed - targetScript.intakeSpeed) * (targetScript.sugar/targetScript.sugarCapacity);
 				targetScript.sugar += (targetScript.intakeSpeed - intakeSpeed) * (sugar/sugarCapacity);
 			}
+			hostility += EnvironmentScript.behavioralReinforcement * Time.fixedDeltaTime;
 			// if the other cell is more powerful, check cowardice to flee, and check target hostility and greed to aggress
 			if (targetScript.intakeSpeed > intakeSpeed) {
 				float cowardiceCheck = sugar/sugarCapacity;
@@ -344,6 +346,7 @@ public class CellBehaviourScript : MonoBehaviour {
 						targetScript.priorTarget = tf;
 					}
 				}
+				courage += EnvironmentScript.behavioralReinforcement * Time.fixedDeltaTime;
 			}
 			// if not, check for greed to stop aggressing
 			else {
@@ -361,6 +364,8 @@ public class CellBehaviourScript : MonoBehaviour {
 				sugar += intakeSpeed * (targetScript.sugar/targetScript.sugarCapacity);
 				targetScript.sugar += -intakeSpeed * (sugar/sugarCapacity);
 			}
+			hostility += EnvironmentScript.behavioralReinforcement * Time.fixedDeltaTime;
+			greed += EnvironmentScript.behavioralReinforcement * Time.fixedDeltaTime;
 			// check for greed to stop aggressing
 			float greedCheck2 = sugar/sugarCapacity;
 			if (greedCheck2 >= 1f + greed) {
@@ -374,16 +379,21 @@ public class CellBehaviourScript : MonoBehaviour {
 	// Flee from another cell
 	void Flee () {
 		MoveTowardsTarget(-maxMovementSpeed);
+		cowardice += EnvironmentScript.behavioralReinforcement * Time.fixedDeltaTime;
+		courage += EnvironmentScript.behavioralRegression * Time.fixedDeltaTime;
 	}
 
 	// Move randomly
 	void Wander () {
 		MoveRandomly(maxMovementSpeed * EnvironmentScript.wanderSpeedPercentage);
+		hostility += EnvironmentScript.behavioralRegression * Time.fixedDeltaTime;
+		cowardice += EnvironmentScript.behavioralRegression * Time.fixedDeltaTime;
+		greed += EnvironmentScript.behavioralRegression * Time.fixedDeltaTime;
 	}
 
 	// Split cell into two cells (called within ProduceEnergy)
 	void Split () {
-		Debug.Log("Split!");
+		Debug.Log("Cell split in generation " + CellSpawning.generationNumber.ToString() + "!");
 		GameObject newCell = (GameObject)Instantiate(cellPrefab, tf.position, Quaternion.identity);
 		CellBehaviourScript newCellScript = newCell.GetComponent<CellBehaviourScript>();
 		newCellScript.intakeSpeed = intakeSpeed;
@@ -467,6 +477,9 @@ public class CellBehaviourScript : MonoBehaviour {
 	void DrawDebugLinesToNearbyCells () {
 		foreach (GameObject cell in nearbyCells) {
 			Debug.DrawLine(tf.position, cell.GetComponent<Transform>().position, Color.blue);
+		}
+		foreach (GameObject cube in nearbySugar) {
+			Debug.DrawLine(tf.position, cube.GetComponent<Transform>().position, Color.green);
 		}
 	}
 }
