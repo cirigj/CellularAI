@@ -17,30 +17,36 @@ public class EnvironmentScript : MonoBehaviour {
 	public static float sugarCapacityToVolumeRatio;
 	public static float sugarLevelRangeMultiplier;
 	public static float sugarCubeResilience;
+	public static float sugarCubeSpeedMin;
+	public static float sugarCubeSpeedMax;
 	public static float viewCheckRefresh;
 	public static string cellTag;
 	public static string sugarTag;
 	public static int liveCells;
+	public static bool fieldWrapping;
 
 	// Use this for initialization
 	void Start () {
-		fieldRadius = 100.0f;
+		fieldRadius = 80.0f;
 		baseConcentration = 1.0f;
 		wanderSpeedPercentage = 0.75f;
 		maxSpeedChange = 1f;
-		viewRange = 80.0f;
+		viewRange = 40.0f;
 		intakeRangeRatio = 2.0f;
 		sugarToEnergyRatio = 1.0f;
-		energyToSplitProgressRatio = 2.0f;
-		splitProgressThreshhold = 100.0f;
+		energyToSplitProgressRatio = 5.0f;
+		splitProgressThreshhold = 500.0f;
 		startingSugarPercentage = 1.0f;
 		startingEnergyPercentage = 0.5f;
 		sugarCapacityToVolumeRatio = 5.0f;
-		sugarLevelRangeMultiplier = 5.0f;
-		sugarCubeResilience = 0.05f;
+		sugarLevelRangeMultiplier = 2.0f;
+		sugarCubeResilience = 0.01f;
+		sugarCubeSpeedMin = 2f;
+		sugarCubeSpeedMax = 6f;
 		viewCheckRefresh = 10f;
 		cellTag = "cell";
 		sugarTag = "sugar";
+		fieldWrapping = true;
 	}
 	
 	// Update is called once per frame

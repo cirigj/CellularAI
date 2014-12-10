@@ -43,7 +43,11 @@ public class CellSpawning : MonoBehaviour {
 	public float greedMax = 1.0f;
 	// other things
 	public GameObject cellPrefab;
+	public GameObject cubePrefab;
 	public int cellsPerGeneration = 10;
+	public int sugarPerGeneration = 3;
+	public float sugarMin = 5f;
+	public float sugarMax = 8f;
 	public float timeBetweenGenerations = 100f;
 	public float masterMutationRate = 1.0f;
 	public float speedMutationRate = 0.1f;
@@ -55,6 +59,7 @@ public class CellSpawning : MonoBehaviour {
 	private CellBehaviourScript nextParent1;
 	private CellBehaviourScript nextParent2;
 	private float doomsdayTimer;
+	private int generationNumber;
 
 	// Use this for initialization
 	void Start () {
@@ -62,12 +67,15 @@ public class CellSpawning : MonoBehaviour {
 		nextParent2 = null;
 		CreateLife();
 		doomsdayTimer = 0f;
+		generationNumber = 0;
 	}
 	
 	// Update is called once per frame
 	void FixedUpdate () {
 		doomsdayTimer += Time.fixedDeltaTime;
 		if (doomsdayTimer >= timeBetweenGenerations || EnvironmentScript.liveCells <= 2) {
+			generationNumber++;
+			Debug.Log("Generation " + generationNumber.ToString() + " created after " + doomsdayTimer.ToString() + " seconds.");
 			PerpetuateLife();
 			doomsdayTimer = 0f;
 		}
@@ -82,6 +90,9 @@ public class CellSpawning : MonoBehaviour {
 			for (int i = 0; i < cellsPerGeneration; i++) {
 				GenerateCellRandom();
 			}
+		}
+		for (int i = 0; i < sugarPerGeneration; i++) {
+			GenerateSugarCube();
 		}
 		EnvironmentScript.liveCells = cellsPerGeneration;
 	}
@@ -106,6 +117,13 @@ public class CellSpawning : MonoBehaviour {
 			for (int i = 0; i < cellsPerGeneration; i++) {
 				GenerateCellRandom();
 			}
+		}
+		GameObject[] allCubes = GameObject.FindGameObjectsWithTag(EnvironmentScript.sugarTag);
+		foreach (GameObject cube in allCubes) {
+			Destroy(cube);
+		}
+		for (int i = 0; i < sugarPerGeneration; i++) {
+			GenerateSugarCube();
 		}
 		EnvironmentScript.liveCells = cellsPerGeneration;
 		foreach (GameObject cell in allCells) {
@@ -136,7 +154,17 @@ public class CellSpawning : MonoBehaviour {
 
 	// Assess how fit the cell is
 	float FitnessAssessment (CellBehaviourScript cell) {
-		return cell.energy/cell.energyCapacity;
+		return cell.energy/cell.energyCapacity + (float)cell.numberOfSplits;
+	}
+
+	// Generate sugar cube
+	void GenerateSugarCube () {
+		GameObject newCube = (GameObject)Instantiate(cubePrefab, 
+		                      new Vector3(Random.Range(-EnvironmentScript.fieldRadius, EnvironmentScript.fieldRadius), 
+		                      Random.Range(-EnvironmentScript.fieldRadius, EnvironmentScript.fieldRadius), 
+		                      0f), 
+		                      Quaternion.identity);
+		newCube.GetComponent<SugarCubeScript>().sugarLevel = Random.Range(sugarMin, sugarMax);
 	}
 
 	// Generate a random cell

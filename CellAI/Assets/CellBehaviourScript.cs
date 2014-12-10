@@ -24,7 +24,8 @@ public class CellBehaviourScript : MonoBehaviour {
 	public bool dead;
 	public bool markedForExtinction;
 	// non-genetic (private):
-	private float splitProgress;
+	public float splitProgress;
+	public float numberOfSplits;
 	private string state;
 	private Rigidbody2D rb;
 	private Transform tf;
@@ -51,6 +52,7 @@ public class CellBehaviourScript : MonoBehaviour {
 		dead = false;
 		markedForExtinction = false;
 		viewRefresh = 0f;
+		numberOfSplits = 0;
 		activated = true;
 	}
 	
@@ -61,6 +63,7 @@ public class CellBehaviourScript : MonoBehaviour {
 				Destroy(gameObject);
 			}
 			if (!dead) {
+				DrawDebugLinesToNearbyCells();
 				viewRefresh += Time.fixedDeltaTime;
 				ExamineNearbyCells();
 				priorTarget = target;
@@ -70,15 +73,31 @@ public class CellBehaviourScript : MonoBehaviour {
 				ProduceEnergy();
 				switch (state) {
 				case "scavenge":
+					GetComponent<Renderer>().material.color = Color.green;
 					Scavenge();
 					break;
 				case "aggress":
+					GetComponent<Renderer>().material.color = Color.red;
 					Aggress();
 					break;
 				case "flee":
+					if (target.tag == EnvironmentScript.sugarTag) {
+						state = "wander";
+						target = null;
+						priorTarget = null;
+						break;
+					}
+					if (target.GetComponent<CellBehaviourScript>().dead) {
+						target = null;
+						priorTarget = null;
+						state = "wander";
+						break;
+					}
+					GetComponent<Renderer>().material.color = Color.blue;
 					Flee();
 					break;
 				case "wander":
+					GetComponent<Renderer>().material.color = Color.white;
 					Wander();
 					break;
 				default:
@@ -87,9 +106,13 @@ public class CellBehaviourScript : MonoBehaviour {
 					break;
 				}
 			}
+			ManageConcentration();
+			rb.angularVelocity = 0f;
+			WrapField();
+			Color c = GetComponent<Renderer>().material.color;
+			c.a = sugar/sugarCapacity;
+			GetComponent<Renderer>().material.color = c;
 		}
-		ManageConcentration();
-		rb.angularVelocity = 0f;
 	}
 
 	// Manage concentration of sugar based on surroundings
@@ -117,7 +140,7 @@ public class CellBehaviourScript : MonoBehaviour {
 		}
 		// if this energy pushes the cell over capacity, add the excess to split progress
 		if (energy > energyCapacity) {
-			splitProgress += (energyCapacity - energy) / EnvironmentScript.energyToSplitProgressRatio;
+			splitProgress += (energy - energyCapacity) / EnvironmentScript.energyToSplitProgressRatio;
 			energy = energyCapacity;
 			// split if threshhold is reached
 			if (splitProgress >= EnvironmentScript.splitProgressThreshhold) {
@@ -130,7 +153,7 @@ public class CellBehaviourScript : MonoBehaviour {
 	// Add or remove cells from nearbyCells list based on proximity
 	void ExamineNearbyCells () {
 		// if view refresh, clear lists
-		if (viewRefresh > EnvironmentScript.viewCheckRefresh) {
+		if (viewRefresh > EnvironmentScript.viewCheckRefresh && !dead) {
 			viewRefresh = 0f;
 			nearbyCells.Clear();
 			nearbySugar.Clear();
@@ -138,7 +161,12 @@ public class CellBehaviourScript : MonoBehaviour {
 		// first, check cells
 		GameObject[] allCells = GameObject.FindGameObjectsWithTag(EnvironmentScript.cellTag);
 		foreach (GameObject cell in allCells) {
+			// make sure not to check cells from the last gen
 			if (cell.GetComponent<CellBehaviourScript>().markedForExtinction) {
+				continue;
+			}
+			// don't include this cell
+			if (cell == gameObject) {
 				continue;
 			}
 			if (Vector3.Distance(cell.GetComponent<Transform>().position, tf.position) <= EnvironmentScript.viewRange) {
@@ -151,7 +179,7 @@ public class CellBehaviourScript : MonoBehaviour {
 			else {
 				if (nearbyCells.Contains(cell)) {
 					nearbyCells.Remove(cell);
-					if (target == cell) {
+					if (target == cell.GetComponent<Transform>()) {
 						target = null;
 						DetermineState();
 					}
@@ -161,6 +189,10 @@ public class CellBehaviourScript : MonoBehaviour {
 		// next, check sugar cubes
 		GameObject[] sugarCubes = GameObject.FindGameObjectsWithTag(EnvironmentScript.sugarTag);
 		foreach (GameObject cube in sugarCubes) {
+			// don't look at depleted sugar cubes
+			if (cube.GetComponent<SugarCubeScript>().depleted) {
+				continue;
+			}
 			if (Vector3.Distance(cube.GetComponent<Transform>().position, tf.position) <= EnvironmentScript.viewRange) {
 				if (!nearbySugar.Contains(cube)) {
 					nearbySugar.Add(cube);
@@ -171,7 +203,7 @@ public class CellBehaviourScript : MonoBehaviour {
 			else {
 				if (nearbySugar.Contains(cube)) {
 					nearbySugar.Remove(cube);
-					if (target == cube) {
+					if (target == cube.GetComponent<Transform>()) {
 						target = null;
 						DetermineState();
 					}
@@ -260,42 +292,76 @@ public class CellBehaviourScript : MonoBehaviour {
 
 	// Move towards sugar cube to get sugar from it
 	void Scavenge () {
+		if (target.tag == EnvironmentScript.cellTag) {
+			state = "wander";
+			target = null;
+			priorTarget = null;
+			return;
+		}
+		if (target.GetComponent<SugarCubeScript>().depleted) {
+			state = "wander";
+			target = null;
+			priorTarget = null;
+			return;
+		}
 		MoveTowardsTarget(maxMovementSpeed);
 		SugarCubeScript targetScript = target.GetComponent<SugarCubeScript>();
 		float sugarRadius = targetScript.sugarLevel * EnvironmentScript.sugarLevelRangeMultiplier;
 		if (Vector3.Distance(tf.position, target.position) < (radius + sugarRadius + intakeSpeed * EnvironmentScript.intakeRangeRatio)) {
 			float sugarDist = Vector3.Distance(tf.position, target.position) - radius - (intakeSpeed * EnvironmentScript.intakeRangeRatio);
-			sugar += intakeSpeed * targetScript.sugarLevel / sugarDist;
-			targetScript.sugarLevel -= intakeSpeed * targetScript.sugarLevel * EnvironmentScript.sugarCubeResilience / sugarDist;
+			sugar += intakeSpeed * (targetScript.sugarLevel * EnvironmentScript.sugarLevelRangeMultiplier - sugarDist);
+			targetScript.sugarLevel -= intakeSpeed * (targetScript.sugarLevel * EnvironmentScript.sugarLevelRangeMultiplier - sugarDist) * EnvironmentScript.sugarCubeResilience;
 		}
 	}
 
 	// Attack another cell
 	void Aggress () {
+		if (target.tag == EnvironmentScript.sugarTag) {
+			state = "wander";
+			target = null;
+			priorTarget = null;
+			return;
+		}
 		CellBehaviourScript targetScript = target.GetComponent<CellBehaviourScript>();
 		MoveTowardsTarget(maxMovementSpeed);
-		if (Vector3.Distance(tf.position, target.position) < (radius + targetScript.radius + intakeSpeed * EnvironmentScript.intakeRangeRatio)) {
-			sugar += (intakeSpeed - targetScript.intakeSpeed) * (targetScript.sugar/targetScript.sugarCapacity);
-			targetScript.sugar += (targetScript.intakeSpeed - intakeSpeed) * (sugar/sugarCapacity);
-		}
-		// if the other cell is more powerful, check cowardice to flee, and check target hostility and greed to aggress
-		if (targetScript.intakeSpeed > intakeSpeed) {
-			float cowardiceCheck = sugar/sugarCapacity;
-			if (cowardiceCheck < cowardice) {
-				state = "flee";
+		if (!targetScript.dead) {
+			if (Vector3.Distance(tf.position, target.position) < (radius + targetScript.radius + intakeSpeed * EnvironmentScript.intakeRangeRatio)) {
+				sugar += (intakeSpeed - targetScript.intakeSpeed) * (targetScript.sugar/targetScript.sugarCapacity);
+				targetScript.sugar += (targetScript.intakeSpeed - intakeSpeed) * (sugar/sugarCapacity);
 			}
-			float hostilityCheck = Random.Range(0f, 1f);
-			if (hostilityCheck < targetScript.hostility) {
-				float greedCheck = targetScript.sugar/targetScript.sugarCapacity;
-				if (greedCheck < targetScript.greed) {
-					state = "aggress";
-					targetScript.target = tf;
-					targetScript.priorTarget = tf;
+			// if the other cell is more powerful, check cowardice to flee, and check target hostility and greed to aggress
+			if (targetScript.intakeSpeed > intakeSpeed) {
+				float cowardiceCheck = sugar/sugarCapacity;
+				if (cowardiceCheck < cowardice) {
+					state = "flee";
+				}
+				float hostilityCheck = Random.Range(0f, 1f);
+				if (hostilityCheck < targetScript.hostility) {
+					float greedCheck = targetScript.sugar/targetScript.sugarCapacity;
+					if (greedCheck < targetScript.greed) {
+						state = "aggress";
+						targetScript.target = tf;
+						targetScript.priorTarget = tf;
+					}
+				}
+			}
+			// if not, check for greed to stop aggressing
+			else {
+				float greedCheck2 = sugar/sugarCapacity;
+				if (greedCheck2 >= 1f + greed) {
+					state = "wander";
+					target = null;
+					priorTarget = null;
 				}
 			}
 		}
-		// if not, check for greed to stop aggressing
+		// if the target is dead, don't account for its intake
 		else {
+			if (Vector3.Distance(tf.position, target.position) < (radius + targetScript.radius + intakeSpeed * EnvironmentScript.intakeRangeRatio)) {
+				sugar += intakeSpeed * (targetScript.sugar/targetScript.sugarCapacity);
+				targetScript.sugar += -intakeSpeed * (sugar/sugarCapacity);
+			}
+			// check for greed to stop aggressing
 			float greedCheck2 = sugar/sugarCapacity;
 			if (greedCheck2 >= 1f + greed) {
 				state = "wander";
@@ -317,6 +383,7 @@ public class CellBehaviourScript : MonoBehaviour {
 
 	// Split cell into two cells (called within ProduceEnergy)
 	void Split () {
+		Debug.Log("Split!");
 		GameObject newCell = (GameObject)Instantiate(cellPrefab, tf.position, Quaternion.identity);
 		CellBehaviourScript newCellScript = newCell.GetComponent<CellBehaviourScript>();
 		newCellScript.intakeSpeed = intakeSpeed;
@@ -330,7 +397,11 @@ public class CellBehaviourScript : MonoBehaviour {
 		newCellScript.cowardice = cowardice;
 		newCellScript.greed = greed;
 		newCellScript.cellPrefab = cellPrefab;
+		newCellScript.radius = Mathf.Pow(0.75f * Mathf.PI * (newCellScript.sugarCapacity/EnvironmentScript.sugarCapacityToVolumeRatio), 1f/3f);
+		newCellScript.GetComponent<Transform>().localScale = new Vector3(newCellScript.radius * 2f, newCellScript.radius * 2f, newCellScript.radius * 2f);
 		EnvironmentScript.liveCells++;
+		numberOfSplits++;
+		newCellScript.numberOfSplits = numberOfSplits;
 	}
 
 	// Move randomly, then expend energy
@@ -348,9 +419,14 @@ public class CellBehaviourScript : MonoBehaviour {
 	void MoveTowardsTarget (float speed) {
 		Vector3 dir3 = target.position - tf.position;
 		Vector2 dir2 = new Vector2(dir3.x, dir3.y).normalized;
-		rb.velocity += dir2 * EnvironmentScript.maxSpeedChange;
-		if (rb.velocity.magnitude > Mathf.Abs(speed)) {
-			rb.velocity = rb.velocity.normalized * speed;
+		if (speed > 0) {
+			rb.velocity += dir2 * EnvironmentScript.maxSpeedChange;
+		}
+		else {
+			rb.velocity += dir2 * -EnvironmentScript.maxSpeedChange;
+		}
+		if (Mathf.Abs(rb.velocity.magnitude) > Mathf.Abs(speed)) {
+			rb.velocity = rb.velocity.normalized * Mathf.Abs(speed);
 		}
 		ExpendEnergy(speed);
 		WrapField();
@@ -363,7 +439,6 @@ public class CellBehaviourScript : MonoBehaviour {
 		// cell dies if energy has been depleted
 		if (energy <= 0f) {
 			dead = true;
-			Debug.Log ("cell died");
 			rb.velocity = Vector2.zero;
 			EnvironmentScript.liveCells--;
 			GetComponent<Renderer>().material.color = Color.black;
@@ -372,17 +447,26 @@ public class CellBehaviourScript : MonoBehaviour {
 
 	// Make sure cells don't leave the boundaries of the field
 	void WrapField () {
-		if (tf.position.x > EnvironmentScript.fieldRadius) {
-			tf.position = new Vector3(tf.position.x-2*EnvironmentScript.fieldRadius, tf.position.y, 0f);
+		if (EnvironmentScript.fieldWrapping) {
+			if (tf.position.x > EnvironmentScript.fieldRadius) {
+				tf.position = new Vector3(tf.position.x-2*EnvironmentScript.fieldRadius, tf.position.y, 0f);
+			}
+			if (tf.position.y > EnvironmentScript.fieldRadius) {
+				tf.position = new Vector3(tf.position.x, tf.position.y-2*EnvironmentScript.fieldRadius, 0f);
+			}
+			if (tf.position.x < -EnvironmentScript.fieldRadius) {
+				tf.position = new Vector3(tf.position.x+2*EnvironmentScript.fieldRadius, tf.position.y, 0f);
+			}
+			if (tf.position.y < -EnvironmentScript.fieldRadius) {
+				tf.position = new Vector3(tf.position.x, tf.position.y+2*EnvironmentScript.fieldRadius, 0f);
+			}
 		}
-		if (tf.position.y > EnvironmentScript.fieldRadius) {
-			tf.position = new Vector3(tf.position.x, tf.position.y-2*EnvironmentScript.fieldRadius, 0f);
-		}
-		if (tf.position.x < -EnvironmentScript.fieldRadius) {
-			tf.position = new Vector3(tf.position.x+2*EnvironmentScript.fieldRadius, tf.position.y, 0f);
-		}
-		if (tf.position.y < -EnvironmentScript.fieldRadius) {
-			tf.position = new Vector3(tf.position.x, tf.position.y+2*EnvironmentScript.fieldRadius, 0f);
+	}
+
+	// Exactly what it says on the tin
+	void DrawDebugLinesToNearbyCells () {
+		foreach (GameObject cell in nearbyCells) {
+			Debug.DrawLine(tf.position, cell.GetComponent<Transform>().position, Color.blue);
 		}
 	}
 }

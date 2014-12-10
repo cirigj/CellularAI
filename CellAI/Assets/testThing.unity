@@ -18,7 +18,7 @@ RenderSettings:
   m_FogDensity: .00999999978
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientLight: {r: .200000003, g: .200000003, b: .200000003, a: 1}
+  m_AmbientLight: {r: 1, g: 1, b: 1, a: 1}
   m_SkyboxMaterial: {fileID: 0}
   m_HaloStrength: .5
   m_FlareStrength: 1
@@ -123,7 +123,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
-  m_BackGroundColor: {r: .192156866, g: .301960796, b: .474509805, a: .0196078438}
+  m_BackGroundColor: {r: .476102948, g: .631229579, b: .875, a: .0196078438}
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
@@ -134,7 +134,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 120
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -193,9 +193,9 @@ MonoBehaviour:
   processingSpeedMax: 4
   sugarCapacityMin: 25
   sugarCapacityMax: 400
-  maxMovementSpeedMin: .125
+  maxMovementSpeedMin: 2
   maxMovementSpeedMax: 8
-  useEfficiencyMin: .25
+  useEfficiencyMin: .125
   useEfficiencyMax: 4
   energyCapacityMin: 25
   energyCapacityMax: 400
@@ -208,8 +208,12 @@ MonoBehaviour:
   greedMin: 0
   greedMax: 1
   cellPrefab: {fileID: 100000, guid: 27802631e6ca1d449b4162d418f9d306, type: 2}
-  cellsPerGeneration: 10
-  timeBetweenGenerations: 100
+  cubePrefab: {fileID: 100000, guid: c4d374853bd43874f84765afcfbf4b24, type: 2}
+  cellsPerGeneration: 15
+  sugarPerGeneration: 10
+  sugarMin: 5
+  sugarMax: 8
+  timeBetweenGenerations: 60
   masterMutationRate: 1
   speedMutationRate: .100000001
   capacityMutationRate: 10
