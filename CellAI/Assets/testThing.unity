@@ -209,15 +209,12 @@ MonoBehaviour:
   greedMax: 1
   cellPrefab: {fileID: 100000, guid: 27802631e6ca1d449b4162d418f9d306, type: 2}
   cubePrefab: {fileID: 100000, guid: c4d374853bd43874f84765afcfbf4b24, type: 2}
-  cellsPerGeneration: 20
-  sugarPerGeneration: 3
+  cellsPerGeneration: 15
+  sugarPerGeneration: 0
   sugarMin: 5
   sugarMax: 8
   timeBetweenGenerations: 60
-  masterMutationRate: 1
-  speedMutationRate: .100000001
-  capacityMutationRate: 10
-  behaviorMutationRate: .0500000007
+  masterMutationRate: 5
   constrainGenes: 1
   loadFirstGenFromFile: 0
   saveGensToFile: 0

@@ -50,9 +50,9 @@ public class CellSpawning : MonoBehaviour {
 	public float sugarMax = 8f;
 	public float timeBetweenGenerations = 100f;
 	public float masterMutationRate = 1.0f;
-	public float speedMutationRate = 0.1f;
-	public float capacityMutationRate = 10.0f;
-	public float behaviorMutationRate = 0.05f;
+	private float speedMutationRate = 0.1f;
+	private float capacityMutationRate = 10.0f;
+	private float behaviorMutationRate = 0.05f;
 	public bool constrainGenes = true;
 	public bool loadFirstGenFromFile = false;
 	public bool saveGensToFile = false;

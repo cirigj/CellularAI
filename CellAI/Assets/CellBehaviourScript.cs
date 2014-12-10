@@ -214,6 +214,7 @@ public class CellBehaviourScript : MonoBehaviour {
 
 	// Determine state based on nearby cells (called within ExamineNearbyCells)
 	void DetermineState () {
+		viewRefresh = 0f;
 		// if there's no target, wander
 		if (target == null) {
 			state = "wander";

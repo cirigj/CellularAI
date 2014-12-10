@@ -46,8 +46,8 @@ public class EnvironmentScript : MonoBehaviour {
 		sugarCubeSpeedMin = 2f;
 		sugarCubeSpeedMax = 6f;
 		viewCheckRefresh = 10f;
-		behavioralReinforcement = 0.01f;
-		behavioralRegression = -0.0035f;
+		behavioralReinforcement = 0.005f;
+		behavioralRegression = -0.0015f;
 		cellTag = "cell";
 		sugarTag = "sugar";
 		fieldWrapping = true;
