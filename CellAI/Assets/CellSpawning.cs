@@ -203,7 +203,7 @@ public class CellSpawning : MonoBehaviour {
 	}
 
 	// Generate a cell from template
-	void GenerateCellFromTemplate (float iS, float pS, float sC, float mMS, float uE, float eC, float cou, float hos, float cow, float gre) {
+	public void GenerateCellFromTemplate (float iS, float pS, float sC, float mMS, float uE, float eC, float cou, float hos, float cow, float gre) {
 		GameObject newCell = (GameObject)Instantiate(cellPrefab, 
 		                      new Vector3(Random.Range(-EnvironmentScript.fieldRadius, EnvironmentScript.fieldRadius), 
 		                      Random.Range(-EnvironmentScript.fieldRadius, EnvironmentScript.fieldRadius), 
