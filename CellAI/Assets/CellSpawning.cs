@@ -91,7 +91,7 @@ public class CellSpawning : MonoBehaviour {
 	// Instantiate first generation
 	void CreateLife () {
 		if (loadFirstGenFromFile) {
-			Debug.Log("WARNING: Loading from file has not yet been implemented!");
+			GetComponent<SaveLoad>().LoadCells();
 		}
 		else {
 			for (int i = 0; i < cellsPerGeneration; i++) {
@@ -136,6 +136,18 @@ public class CellSpawning : MonoBehaviour {
 		EnvironmentScript.liveCells = cellsPerGeneration;
 		foreach (GameObject cell in allCells) {
 			cell.GetComponent<CellBehaviourScript>().markedForExtinction = true;
+		}
+		if (saveGensToFile) {
+			GameObject[] potentialCells = GameObject.FindGameObjectsWithTag(EnvironmentScript.cellTag);
+			List<GameObject> cellsToSave = new List<GameObject>();
+			foreach (GameObject cell in potentialCells) {
+				CellBehaviourScript cellScript = cell.GetComponent<CellBehaviourScript>();
+				if (cellScript.markedForExtinction) {
+					continue;
+				}
+				cellsToSave.Add(cell);
+			}
+			GetComponent<SaveLoad>().SaveCells(cellsToSave);
 		}
 		if (printAverageBehavior) {
 			AssessAverages();

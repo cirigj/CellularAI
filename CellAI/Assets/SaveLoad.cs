@@ -44,4 +44,12 @@ public class SaveLoad : MonoBehaviour {
 	void Update () {
 	
 	}
+
+	public void SaveCells(List<GameObject> cells) {
+
+	}
+
+	public void LoadCells() {
+
+	}
 }
