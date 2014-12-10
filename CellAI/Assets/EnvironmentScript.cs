@@ -3,6 +3,7 @@ using System.Collections;
 
 public class EnvironmentScript : MonoBehaviour {
 
+	public static float fieldRadius;
 	public static float baseConcentration;
 	public static float wanderSpeedPercentage;
 	public static float maxSpeedChange;
@@ -16,15 +17,18 @@ public class EnvironmentScript : MonoBehaviour {
 	public static float sugarCapacityToVolumeRatio;
 	public static float sugarLevelRangeMultiplier;
 	public static float sugarCubeResilience;
+	public static float viewCheckRefresh;
 	public static string cellTag;
 	public static string sugarTag;
+	public static int liveCells;
 
 	// Use this for initialization
 	void Start () {
+		fieldRadius = 100.0f;
 		baseConcentration = 1.0f;
-		wanderSpeedPercentage = 0.5f;
-		maxSpeedChange = 0.25f;
-		viewRange = 150.0f;
+		wanderSpeedPercentage = 0.75f;
+		maxSpeedChange = 1f;
+		viewRange = 80.0f;
 		intakeRangeRatio = 2.0f;
 		sugarToEnergyRatio = 1.0f;
 		energyToSplitProgressRatio = 2.0f;
@@ -34,6 +38,7 @@ public class EnvironmentScript : MonoBehaviour {
 		sugarCapacityToVolumeRatio = 5.0f;
 		sugarLevelRangeMultiplier = 5.0f;
 		sugarCubeResilience = 0.05f;
+		viewCheckRefresh = 10f;
 		cellTag = "cell";
 		sugarTag = "sugar";
 	}

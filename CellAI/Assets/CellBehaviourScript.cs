@@ -22,18 +22,22 @@ public class CellBehaviourScript : MonoBehaviour {
 	public float radius;
 	public GameObject cellPrefab;
 	public bool dead;
+	public bool markedForExtinction;
 	// non-genetic (private):
 	private float splitProgress;
 	private string state;
 	private Rigidbody2D rb;
 	private Transform tf;
-	private Transform target;
+	public Transform target;
 	private Transform priorTarget;
 	private List<GameObject> nearbyCells;
 	private List<GameObject> nearbySugar;
+	private bool activated;
+	private float viewRefresh;
 
 	// Use this for initialization
 	void Start () {
+		activated = false;
 		tf = GetComponent<Transform>();
 		rb = GetComponent<Rigidbody2D>();
 		energy = EnvironmentScript.startingEnergyPercentage * energyCapacity;
@@ -45,33 +49,43 @@ public class CellBehaviourScript : MonoBehaviour {
 		nearbyCells = new List<GameObject>();
 		nearbySugar = new List<GameObject>();
 		dead = false;
-		radius = Mathf.Pow(0.75f * Mathf.PI * (sugarCapacity/EnvironmentScript.sugarCapacityToVolumeRatio), 1f/3f);
-		tf.localScale = new Vector3(radius * 2f, radius * 2f, radius * 2f);
+		markedForExtinction = false;
+		viewRefresh = 0f;
+		activated = true;
 	}
 	
 	// Update is called once per frame
 	void FixedUpdate () {
-		if (!dead) {
-			ExamineNearbyCells();
-			priorTarget = target;
-			ProduceEnergy();
-			switch (state) {
-			case "scavenge":
-				Scavenge();
-				break;
-			case "aggress":
-				Aggress();
-				break;
-			case "flee":
-				Flee();
-				break;
-			case "wander":
-				Wander();
-				break;
-			default:
-				Wander();
-				Debug.Log("WARNING: INVALID STATE!");
-				break;
+		if (activated) {
+			if (markedForExtinction) {
+				Destroy(gameObject);
+			}
+			if (!dead) {
+				viewRefresh += Time.fixedDeltaTime;
+				ExamineNearbyCells();
+				priorTarget = target;
+				if (target == null) {
+					state = "wander";
+				}
+				ProduceEnergy();
+				switch (state) {
+				case "scavenge":
+					Scavenge();
+					break;
+				case "aggress":
+					Aggress();
+					break;
+				case "flee":
+					Flee();
+					break;
+				case "wander":
+					Wander();
+					break;
+				default:
+					Wander();
+					Debug.Log("WARNING: INVALID STATE!");
+					break;
+				}
 			}
 		}
 		ManageConcentration();
@@ -115,9 +129,18 @@ public class CellBehaviourScript : MonoBehaviour {
 
 	// Add or remove cells from nearbyCells list based on proximity
 	void ExamineNearbyCells () {
+		// if view refresh, clear lists
+		if (viewRefresh > EnvironmentScript.viewCheckRefresh) {
+			viewRefresh = 0f;
+			nearbyCells.Clear();
+			nearbySugar.Clear();
+		}
 		// first, check cells
 		GameObject[] allCells = GameObject.FindGameObjectsWithTag(EnvironmentScript.cellTag);
 		foreach (GameObject cell in allCells) {
+			if (cell.GetComponent<CellBehaviourScript>().markedForExtinction) {
+				continue;
+			}
 			if (Vector3.Distance(cell.GetComponent<Transform>().position, tf.position) <= EnvironmentScript.viewRange) {
 				if (!nearbyCells.Contains(cell)) {
 					nearbyCells.Add(cell);
@@ -271,6 +294,15 @@ public class CellBehaviourScript : MonoBehaviour {
 				}
 			}
 		}
+		// if not, check for greed to stop aggressing
+		else {
+			float greedCheck2 = sugar/sugarCapacity;
+			if (greedCheck2 >= 1f + greed) {
+				state = "wander";
+				target = null;
+				priorTarget = null;
+			}
+		}
 	}
 
 	// Flee from another cell
@@ -298,14 +330,18 @@ public class CellBehaviourScript : MonoBehaviour {
 		newCellScript.cowardice = cowardice;
 		newCellScript.greed = greed;
 		newCellScript.cellPrefab = cellPrefab;
+		EnvironmentScript.liveCells++;
 	}
 
 	// Move randomly, then expend energy
 	void MoveRandomly (float speed) {
 		Vector2 dir2 = Random.insideUnitCircle.normalized;
 		rb.velocity += dir2 * EnvironmentScript.maxSpeedChange;
-		rb.velocity = Vector2.ClampMagnitude(rb.velocity, speed);
+		if (rb.velocity.magnitude > Mathf.Abs(speed)) {
+			rb.velocity = rb.velocity.normalized * speed;
+		}
 		ExpendEnergy(speed);
+		WrapField();
 	}
 
 	// Set and clamp velocity, then expend energy
@@ -313,8 +349,11 @@ public class CellBehaviourScript : MonoBehaviour {
 		Vector3 dir3 = target.position - tf.position;
 		Vector2 dir2 = new Vector2(dir3.x, dir3.y).normalized;
 		rb.velocity += dir2 * EnvironmentScript.maxSpeedChange;
-		rb.velocity = Vector2.ClampMagnitude(rb.velocity, speed);
+		if (rb.velocity.magnitude > Mathf.Abs(speed)) {
+			rb.velocity = rb.velocity.normalized * speed;
+		}
 		ExpendEnergy(speed);
+		WrapField();
 	}
 
 	// Call this whenever a cell is expending energy on movement
@@ -324,6 +363,26 @@ public class CellBehaviourScript : MonoBehaviour {
 		// cell dies if energy has been depleted
 		if (energy <= 0f) {
 			dead = true;
+			Debug.Log ("cell died");
+			rb.velocity = Vector2.zero;
+			EnvironmentScript.liveCells--;
+			GetComponent<Renderer>().material.color = Color.black;
+		}
+	}
+
+	// Make sure cells don't leave the boundaries of the field
+	void WrapField () {
+		if (tf.position.x > EnvironmentScript.fieldRadius) {
+			tf.position = new Vector3(tf.position.x-2*EnvironmentScript.fieldRadius, tf.position.y, 0f);
+		}
+		if (tf.position.y > EnvironmentScript.fieldRadius) {
+			tf.position = new Vector3(tf.position.x, tf.position.y-2*EnvironmentScript.fieldRadius, 0f);
+		}
+		if (tf.position.x < -EnvironmentScript.fieldRadius) {
+			tf.position = new Vector3(tf.position.x+2*EnvironmentScript.fieldRadius, tf.position.y, 0f);
+		}
+		if (tf.position.y < -EnvironmentScript.fieldRadius) {
+			tf.position = new Vector3(tf.position.x, tf.position.y+2*EnvironmentScript.fieldRadius, 0f);
 		}
 	}
 }
