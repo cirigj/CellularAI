@@ -380,7 +380,9 @@ public class CellBehaviourScript : MonoBehaviour {
 	void Flee () {
 		MoveTowardsTarget(-maxMovementSpeed);
 		cowardice += EnvironmentScript.behavioralReinforcement * Time.fixedDeltaTime;
-		courage += EnvironmentScript.behavioralRegression * Time.fixedDeltaTime;
+		if (target.GetComponent<CellBehaviourScript>().sugarCapacity > sugarCapacity) {
+			courage += EnvironmentScript.behavioralRegression * Time.fixedDeltaTime;
+		}
 	}
 
 	// Move randomly
