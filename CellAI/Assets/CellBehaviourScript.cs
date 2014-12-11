@@ -313,6 +313,9 @@ public class CellBehaviourScript : MonoBehaviour {
 			targetScript.sugarLevel -= intakeSpeed * (targetScript.sugarLevel * EnvironmentScript.sugarLevelRangeMultiplier - sugarDist) * EnvironmentScript.sugarCubeResilience;
 		}
 		greed += EnvironmentScript.behavioralReinforcement * Time.fixedDeltaTime;
+		courage += EnvironmentScript.behavioralRegression * Time.fixedDeltaTime;
+		hostility += EnvironmentScript.behavioralRegression * Time.fixedDeltaTime;
+		cowardice += EnvironmentScript.behavioralRegression * Time.fixedDeltaTime;
 	}
 
 	// Attack another cell
@@ -325,12 +328,14 @@ public class CellBehaviourScript : MonoBehaviour {
 		}
 		CellBehaviourScript targetScript = target.GetComponent<CellBehaviourScript>();
 		MoveTowardsTarget(maxMovementSpeed);
+		float intakeDist = Vector3.Distance(tf.position, target.position) - radius - target.GetComponent<CellBehaviourScript>().radius - intakeSpeed * EnvironmentScript.intakeRangeRatio;
 		if (!targetScript.dead) {
 			if (Vector3.Distance(tf.position, target.position) < (radius + targetScript.radius + intakeSpeed * EnvironmentScript.intakeRangeRatio)) {
-				sugar += (intakeSpeed - targetScript.intakeSpeed) * (targetScript.sugar/targetScript.sugarCapacity);
-				targetScript.sugar += (targetScript.intakeSpeed - intakeSpeed) * (sugar/sugarCapacity);
+				sugar += (intakeSpeed - targetScript.intakeSpeed - intakeDist) * (targetScript.sugar/targetScript.sugarCapacity);
+				targetScript.sugar += (targetScript.intakeSpeed - intakeSpeed - intakeDist) * (sugar/sugarCapacity);
 			}
 			hostility += EnvironmentScript.behavioralReinforcement * Time.fixedDeltaTime;
+			cowardice += EnvironmentScript.behavioralRegression * Time.fixedDeltaTime;
 			// if the other cell is more powerful, check cowardice to flee, and check target hostility and greed to aggress
 			if (targetScript.intakeSpeed > intakeSpeed) {
 				float cowardiceCheck = sugar/sugarCapacity;
@@ -347,6 +352,7 @@ public class CellBehaviourScript : MonoBehaviour {
 					}
 				}
 				courage += EnvironmentScript.behavioralReinforcement * Time.fixedDeltaTime;
+				cowardice += EnvironmentScript.behavioralRegression * Time.fixedDeltaTime;
 			}
 			// if not, check for greed to stop aggressing
 			else {
@@ -361,8 +367,8 @@ public class CellBehaviourScript : MonoBehaviour {
 		// if the target is dead, don't account for its intake
 		else {
 			if (Vector3.Distance(tf.position, target.position) < (radius + targetScript.radius + intakeSpeed * EnvironmentScript.intakeRangeRatio)) {
-				sugar += intakeSpeed * (targetScript.sugar/targetScript.sugarCapacity);
-				targetScript.sugar += -intakeSpeed * (sugar/sugarCapacity);
+				sugar += (intakeSpeed - intakeDist) * (targetScript.sugar/targetScript.sugarCapacity);
+				targetScript.sugar += (-intakeSpeed + intakeDist) * (sugar/sugarCapacity);
 			}
 			hostility += EnvironmentScript.behavioralReinforcement * Time.fixedDeltaTime;
 			greed += EnvironmentScript.behavioralReinforcement * Time.fixedDeltaTime;
@@ -380,8 +386,10 @@ public class CellBehaviourScript : MonoBehaviour {
 	void Flee () {
 		MoveTowardsTarget(-maxMovementSpeed);
 		cowardice += EnvironmentScript.behavioralReinforcement * Time.fixedDeltaTime;
+		hostility += EnvironmentScript.behavioralRegression * Time.fixedDeltaTime;
+		greed += EnvironmentScript.behavioralRegression * Time.fixedDeltaTime;
 		if (target.GetComponent<CellBehaviourScript>().sugarCapacity > sugarCapacity) {
-			courage += EnvironmentScript.behavioralRegression * Time.fixedDeltaTime;
+			courage -= EnvironmentScript.behavioralReinforcement * Time.fixedDeltaTime;
 		}
 	}
 
