@@ -45,7 +45,7 @@ public class EnvironmentScript : MonoBehaviour {
 		maxSpeedChange = 1f;
 		viewRange = 40.0f;
 		intakeRangeRatio = 1.0f;
-		sugarToEnergyRatio = 1.0f;
+		sugarToEnergyRatio = 5.0f;
 		energyToSplitProgressRatio = 5.0f;
 		splitProgressThreshhold = 500.0f;
 		startingSugarPercentage = 1.0f;
