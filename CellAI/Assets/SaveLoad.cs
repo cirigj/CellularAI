@@ -67,7 +67,9 @@ public class SaveLoad : MonoBehaviour {
 		numCellsToSpawn = Int32.Parse (FileString);
 		//print (FileString);
 		//print (numCellsToSpawn);
-		
+		if (CellSpawning.cellsPerGeneration < numCellsToSpawn) {
+			numCellsToSpawn = CellSpawning.cellsPerGeneration;
+		}
 		//FileString = Load.ReadLine();
 		for (int i = 0; i < numCellsToSpawn;i++){
 		FileString = Load.ReadLine();

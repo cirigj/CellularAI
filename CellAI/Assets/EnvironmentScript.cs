@@ -44,7 +44,7 @@ public class EnvironmentScript : MonoBehaviour {
 		wanderSpeedPercentage = 0.75f;
 		maxSpeedChange = 1f;
 		viewRange = 40.0f;
-		intakeRangeRatio = 2.0f;
+		intakeRangeRatio = 1.0f;
 		sugarToEnergyRatio = 1.0f;
 		energyToSplitProgressRatio = 5.0f;
 		splitProgressThreshhold = 500.0f;
