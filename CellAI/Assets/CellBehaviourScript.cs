@@ -332,7 +332,7 @@ public class CellBehaviourScript : MonoBehaviour {
 		if (!targetScript.dead) {
 			if (Vector3.Distance(tf.position, target.position) < (radius + targetScript.radius + intakeSpeed * EnvironmentScript.intakeRangeRatio)) {
 				sugar += (intakeSpeed - targetScript.intakeSpeed - intakeDist) * (targetScript.sugar/targetScript.sugarCapacity);
-				targetScript.sugar += (targetScript.intakeSpeed - intakeSpeed - intakeDist) * (sugar/sugarCapacity);
+				targetScript.sugar += (targetScript.intakeSpeed - intakeSpeed + intakeDist) * (sugar/sugarCapacity);
 			}
 			hostility += EnvironmentScript.behavioralReinforcement * Time.fixedDeltaTime;
 			cowardice += EnvironmentScript.behavioralRegression * Time.fixedDeltaTime;
@@ -346,7 +346,7 @@ public class CellBehaviourScript : MonoBehaviour {
 				if (hostilityCheck < targetScript.hostility) {
 					float greedCheck = targetScript.sugar/targetScript.sugarCapacity;
 					if (greedCheck < targetScript.greed) {
-						state = "aggress";
+						targetScript.state = "aggress";
 						targetScript.target = tf;
 						targetScript.priorTarget = tf;
 					}
@@ -354,13 +354,22 @@ public class CellBehaviourScript : MonoBehaviour {
 				courage += EnvironmentScript.behavioralReinforcement * Time.fixedDeltaTime;
 				cowardice += EnvironmentScript.behavioralRegression * Time.fixedDeltaTime;
 			}
-			// if not, check for greed to stop aggressing
+			// if not, check for greed to stop aggressing, and check other cell to flee
 			else {
 				float greedCheck2 = sugar/sugarCapacity;
 				if (greedCheck2 >= 1f + greed) {
 					state = "wander";
 					target = null;
 					priorTarget = null;
+				}
+				float courageCheck = Random.Range(0f, 1f);
+				if (courageCheck >= targetScript.courage) {
+					float cowardiceCheck = 0.5f*targetScript.sugar/targetScript.sugarCapacity + Random.Range(0f, 0.5f);
+					if (cowardiceCheck < targetScript.cowardice) {
+						targetScript.state = "flee";
+						targetScript.target = tf;
+						targetScript.priorTarget = tf;
+					}
 				}
 			}
 		}
