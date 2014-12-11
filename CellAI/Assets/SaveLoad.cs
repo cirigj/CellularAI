@@ -42,6 +42,7 @@ public class SaveLoad : MonoBehaviour {
 	}
 
 	public void SaveCells(List<GameObject> cells) {
+		Debug.Log ("Saving generation");
 		StreamWriter save = new StreamWriter (fileName);
 		save.WriteLine("{0}", cells.Count);
 		save.Flush();
@@ -52,6 +53,7 @@ public class SaveLoad : MonoBehaviour {
 			
 			save.Flush();
 		}
+		save.Close ();
 	}
 
 	public void LoadCells() {
