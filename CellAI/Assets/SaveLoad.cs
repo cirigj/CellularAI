@@ -7,7 +7,8 @@ using System.IO;
 public class SaveLoad : MonoBehaviour {
 
 	public string fileName = "saveFile.txt";
-	public List<GameObject> cells;
+	CellSpawning CellSpawning;
+	//public List<GameObject> cells;
 
 	/*
 // genetic (physical):
@@ -24,19 +25,14 @@ public class SaveLoad : MonoBehaviour {
 	public float greed;
 	 */
 	// Use this for initialization
+	void Awake(){
+		CellSpawning = gameObject.GetComponent<CellSpawning>();
+
+	}
 	void Start () {
 
-		StreamWriter save = new StreamWriter (fileName);
-		save.WriteLine("{0}\n", cells.Count);
-		save.Flush();
-		foreach (GameObject cell in cells) {
-			CellBehaviourScript behaviour = cell.GetComponent<CellBehaviourScript>();
-			save.WriteLine(String.Format ("intakeSpeed {0}:processingSpeed {1}:sugarCapacity {2}:maxMovementSpeed {3}:useEfficiency {4}:energyCapacity {5}:courage {6}:hostility {7}:cowardice {8}:greed {9} \n",
-			              behaviour.intakeSpeed,behaviour.processingSpeed,behaviour.sugarCapacity,behaviour.maxMovementSpeed,behaviour.useEfficiency,behaviour.energyCapacity,behaviour.courage,behaviour.hostility,behaviour.cowardice,behaviour.greed));
 
-			save.Flush();
-		}
-		
+
 	
 	}
 	
@@ -46,10 +42,54 @@ public class SaveLoad : MonoBehaviour {
 	}
 
 	public void SaveCells(List<GameObject> cells) {
-
+		StreamWriter save = new StreamWriter (fileName);
+		save.WriteLine("{0}", cells.Count);
+		save.Flush();
+		foreach (GameObject cell in cells) {
+			CellBehaviourScript behaviour = cell.GetComponent<CellBehaviourScript>();
+			save.WriteLine(String.Format ("{0}:{1}:{2}:{3}:{4}:{5}:{6}:{7}:{8}:{9}",
+			                              behaviour.intakeSpeed,behaviour.processingSpeed,behaviour.sugarCapacity,behaviour.maxMovementSpeed,behaviour.useEfficiency,behaviour.energyCapacity,behaviour.courage,behaviour.hostility,behaviour.cowardice,behaviour.greed));
+			
+			save.Flush();
+		}
 	}
 
 	public void LoadCells() {
+		//Debug.Log (CellSpawning.name);
+		bool needRandom = false;
+		int numRandomSpawn = 0;
+		StreamReader Load = new StreamReader (fileName);
+		int numCellsToSpawn;
+		string FileString =  Load.ReadLine();
+		//print (FileString);
+		numCellsToSpawn = Int32.Parse (FileString);
+		//print (FileString);
+		//print (numCellsToSpawn);
+		
+		//FileString = Load.ReadLine();
+		for (int i = 0; i < numCellsToSpawn;i++){
+		FileString = Load.ReadLine();
+		string[] stats = FileString.Split (':');	
+		foreach (string stat in stats){
+		//	print (stat);
+		}
+			CellSpawning.GenerateCellFromTemplate(float.Parse(stats[0]),float.Parse(stats[1]),float.Parse(stats[2]),float.Parse(stats[3]),float.Parse(stats[4]),float.Parse(stats[5]),float.Parse(stats[6]),float.Parse(stats[7]),float.Parse(stats[8]),float.Parse(stats[9]));
+		}
+		//print (FileString);
+		//Debug.Log (CellSpawning.GetComponent<CellSpawning> ().cellsPerGeneration);
+		if(CellSpawning.cellsPerGeneration > numCellsToSpawn){
+			needRandom = true;
+			numRandomSpawn = CellSpawning.cellsPerGeneration - numCellsToSpawn;
+		}
+		if (needRandom) {
+			Debug.Log ("Spawning " + numRandomSpawn.ToString() + " more cells");
+			for (int i = 0 ; i < numRandomSpawn; i++){
+			CellSpawning.GenerateCellRandom();		
+			}
+		}
+		//
+		//FileString = Load.ReadLine ();
+
 
 	}
 }
