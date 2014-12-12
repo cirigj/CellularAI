@@ -35,6 +35,7 @@ public class CellBehaviourScript : MonoBehaviour {
 	private List<GameObject> nearbySugar;
 	private bool activated;
 	private float viewRefresh;
+	private bool stateChanged;
 
 	// Use this for initialization
 	void Start () {
@@ -52,6 +53,7 @@ public class CellBehaviourScript : MonoBehaviour {
 		dead = false;
 		markedForExtinction = false;
 		viewRefresh = 0f;
+		stateChanged = false;
 		activated = true;
 	}
 	
@@ -62,8 +64,8 @@ public class CellBehaviourScript : MonoBehaviour {
 				Destroy(gameObject);
 			}
 			if (!dead) {
+				stateChanged = false;
 				DrawDebugLinesToNearbyCells();
-				viewRefresh += Time.fixedDeltaTime;
 				ExamineNearbyCells();
 				priorTarget = target;
 				if (target == null) {
@@ -160,6 +162,9 @@ public class CellBehaviourScript : MonoBehaviour {
 		// first, check cells
 		GameObject[] allCells = GameObject.FindGameObjectsWithTag(EnvironmentScript.cellTag);
 		foreach (GameObject cell in allCells) {
+			if (stateChanged) {
+				return;
+			}
 			// make sure not to check cells from the last gen
 			if (cell.GetComponent<CellBehaviourScript>().markedForExtinction) {
 				continue;
@@ -188,6 +193,9 @@ public class CellBehaviourScript : MonoBehaviour {
 		// next, check sugar cubes
 		GameObject[] sugarCubes = GameObject.FindGameObjectsWithTag(EnvironmentScript.sugarTag);
 		foreach (GameObject cube in sugarCubes) {
+			if (stateChanged) {
+				return;
+			}
 			// don't look at depleted sugar cubes
 			if (cube.GetComponent<SugarCubeScript>().depleted) {
 				continue;
@@ -213,10 +221,15 @@ public class CellBehaviourScript : MonoBehaviour {
 
 	// Determine state based on nearby cells (called within ExamineNearbyCells)
 	void DetermineState () {
+		if (stateChanged) {
+			return;
+		}
 		viewRefresh = 0f;
 		// if there's no target, wander
 		if (target == null) {
 			state = "wander";
+			stateChanged = true;
+			return;
 		}
 		// if the target is a cell:
 		else if (target.tag == EnvironmentScript.cellTag) {
@@ -229,8 +242,10 @@ public class CellBehaviourScript : MonoBehaviour {
 					// if courage check succeeds, check hostility stat to aggress
 					if (courageCheck < courage) {
 						float hostilityCheck = Random.Range(0f, 1f);
-						if (hostilityCheck < hostility) {
+						if (hostilityCheck < hostility*0.5f) {
 							state = "aggress";
+							stateChanged = true;
+							return;
 						}
 						else {
 							target = priorTarget;
@@ -239,8 +254,10 @@ public class CellBehaviourScript : MonoBehaviour {
 					// if not, check cowardice stat to flee
 					else {
 						float cowardiceCheck = Random.Range(0f, 1f);
-						if (cowardiceCheck < cowardice) {
+						if (cowardiceCheck < cowardice*0.5f) {
 							state = "flee";
+							stateChanged = true;
+							return;
 						}
 						else {
 							target = priorTarget;
@@ -252,11 +269,15 @@ public class CellBehaviourScript : MonoBehaviour {
 					// check hostility stat to aggress, and check cowardice if not aggressing
 					float hostilityCheck = Random.Range(0f, 1f);
 					float cowardiceCheck = Random.Range(0f, 1f);
-					if (hostilityCheck < hostility) {
+					if (hostilityCheck < hostility*0.5f) {
 						state = "aggress";
+						stateChanged = true;
+						return;
 					}
-					else if (cowardiceCheck < cowardice) {
+					else if (cowardiceCheck < cowardice*0.5f) {
 						state = "flee";
+						stateChanged = true;
+						return;
 					}
 					else {
 						target = priorTarget;
@@ -266,8 +287,10 @@ public class CellBehaviourScript : MonoBehaviour {
 			// if the target is dead, check greed to aggress
 			else {
 				float greedCheck = Random.Range(0f, 1f);
-				if (greedCheck < greed) {
+				if (greedCheck < greed*0.5f) {
 					state = "aggress";
+					stateChanged = true;
+					return;
 				}
 				else {
 					target = priorTarget;
@@ -278,8 +301,10 @@ public class CellBehaviourScript : MonoBehaviour {
 		else if (target.tag == EnvironmentScript.sugarTag) {
 			// check greed stat to scavenge
 			float greedCheck = Random.Range(0f, 1f);
-			if (greedCheck < greed) {
+			if (greedCheck < greed*0.5f) {
 				state = "scavenge";
+				stateChanged = true;
+				return;
 			}
 			else {
 				target = priorTarget;
@@ -299,6 +324,13 @@ public class CellBehaviourScript : MonoBehaviour {
 			return;
 		}
 		if (target.GetComponent<SugarCubeScript>().depleted) {
+			state = "wander";
+			target = null;
+			priorTarget = null;
+			return;
+		}
+		float greedCheck = 0.5f*sugar/sugarCapacity + Random.Range(0f, 0.5f/Time.fixedDeltaTime);
+		if (greedCheck < greed*0.5f) {
 			state = "wander";
 			target = null;
 			priorTarget = null;
@@ -339,13 +371,13 @@ public class CellBehaviourScript : MonoBehaviour {
 			// if the other cell is more powerful, check cowardice to flee, and check target hostility and greed to aggress
 			if (targetScript.intakeSpeed > intakeSpeed) {
 				float cowardiceCheck = sugar/sugarCapacity;
-				if (cowardiceCheck < cowardice) {
+				if (cowardiceCheck < cowardice*0.5f) {
 					state = "flee";
 				}
-				float hostilityCheck = Random.Range(0f, 1f);
-				if (hostilityCheck < targetScript.hostility) {
+				float hostilityCheck = Random.Range(0f, 1f/Time.fixedDeltaTime);
+				if (hostilityCheck < targetScript.hostility*0.5f) {
 					float greedCheck = targetScript.sugar/targetScript.sugarCapacity;
-					if (greedCheck < targetScript.greed) {
+					if (greedCheck < targetScript.greed*0.5f) {
 						targetScript.state = "aggress";
 						targetScript.target = tf;
 						targetScript.priorTarget = tf;
@@ -357,15 +389,15 @@ public class CellBehaviourScript : MonoBehaviour {
 			// if not, check for greed to stop aggressing, and check other cell to flee
 			else {
 				float greedCheck2 = sugar/sugarCapacity;
-				if (greedCheck2 >= 1f + greed) {
+				if (greedCheck2 >= 1f + greed*2f) {
 					state = "wander";
 					target = null;
 					priorTarget = null;
 				}
 				float courageCheck = Random.Range(0f, 1f);
 				if (courageCheck >= targetScript.courage) {
-					float cowardiceCheck = 0.5f*targetScript.sugar/targetScript.sugarCapacity + Random.Range(0f, 0.5f);
-					if (cowardiceCheck < targetScript.cowardice) {
+					float cowardiceCheck = 0.5f*targetScript.sugar/targetScript.sugarCapacity + Random.Range(0f, 0.5f/Time.fixedDeltaTime);
+					if (cowardiceCheck < targetScript.cowardice*0.5f) {
 						targetScript.state = "flee";
 						targetScript.target = tf;
 						targetScript.priorTarget = tf;
@@ -383,7 +415,7 @@ public class CellBehaviourScript : MonoBehaviour {
 			greed += EnvironmentScript.behavioralReinforcement * Time.fixedDeltaTime;
 			// check for greed to stop aggressing
 			float greedCheck2 = sugar/sugarCapacity;
-			if (greedCheck2 >= 1f + greed) {
+			if (greedCheck2 >= 1f + greed*2f) {
 				state = "wander";
 				target = null;
 				priorTarget = null;
@@ -404,6 +436,7 @@ public class CellBehaviourScript : MonoBehaviour {
 
 	// Move randomly
 	void Wander () {
+		viewRefresh += Time.fixedDeltaTime;
 		MoveRandomly(maxMovementSpeed * EnvironmentScript.wanderSpeedPercentage);
 		hostility += EnvironmentScript.behavioralRegression * Time.fixedDeltaTime;
 		cowardice += EnvironmentScript.behavioralRegression * Time.fixedDeltaTime;

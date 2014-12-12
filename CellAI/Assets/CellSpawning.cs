@@ -306,13 +306,13 @@ public class CellSpawning : MonoBehaviour {
 		else {
 			newCellScript.greed = parent2.greed
 				+ Random.Range(-masterMutationRate*0.5f*behaviorMutationRate, masterMutationRate*0.5f*behaviorMutationRate); }
+		if (constrainGenes) {
+			CapCellVariables(newCellScript);
+		}
 		newCellScript.cellPrefab = cellPrefab;
 		newCellScript.numberOfSplits = 0;
 		newCellScript.radius = Mathf.Pow(0.75f * Mathf.PI * (newCellScript.sugarCapacity/EnvironmentScript.sugarCapacityToVolumeRatio), 1f/3f);
 		newCellScript.GetComponent<Transform>().localScale = new Vector3(newCellScript.radius * 2f, newCellScript.radius * 2f, newCellScript.radius * 2f);
-		if (constrainGenes) {
-			CapCellVariables(newCellScript);
-		}
 	}
 
 	// Make sure the cell variables don't exceed the caps
